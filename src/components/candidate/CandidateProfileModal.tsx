@@ -46,10 +46,10 @@ export const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
   );
 
   // Editable fields
-  const [displayName, setDisplayName] = useState(profile.displayName);
-  const [isAnonymous, setIsAnonymous] = useState(profile.isAnonymous);
-  const [district, setDistrict] = useState(profile.district);
-  const [tradeOrField, setTradeOrField] = useState(profile.tradeOrField);
+  const [displayName, setDisplayName] = useState(profile?.displayName || profile?.name || 'Candidate');
+  const [isAnonymous, setIsAnonymous] = useState(!!profile?.isAnonymous);
+  const [district, setDistrict] = useState(profile?.district || 'Pune');
+  const [tradeOrField, setTradeOrField] = useState(profile?.tradeOrField || 'Computer Science & IT / Software');
   const [smsAlerts, setSmsAlerts] = useState(true);
   const [ivrCallAlerts, setIvrCallAlerts] = useState(false);
   const [streakReminders, setStreakReminders] = useState(true);
@@ -84,7 +84,7 @@ export const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
         <div className="bg-[#0C2340] text-white p-4 sm:p-5 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-full bg-amber-400 text-slate-950 font-black text-lg flex items-center justify-center shadow-xs">
-              {profile.displayName.charAt(0)}
+              {(profile?.displayName || profile?.name || 'C').charAt(0).toUpperCase()}
             </div>
             <div>
               <div className="flex items-center space-x-2">
@@ -217,7 +217,7 @@ export const CandidateProfileModal: React.FC<CandidateProfileModalProps> = ({
                     <span>Leaderboard Identity Anonymity</span>
                   </span>
                   <p className="text-[11px] text-slate-500">
-                    When enabled, other trainees see &apos;Anonymous Learner #{profile.id.slice(-3)}&apos; on the community board.
+                    When enabled, other trainees see &apos;Anonymous Learner #{(profile?.id || '9042').slice(-3)}&apos; on the community board.
                   </p>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">

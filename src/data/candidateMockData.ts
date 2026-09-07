@@ -51,15 +51,15 @@ export const DEFAULT_CANDIDATE_PROFILE: CandidateProfile = {
   aim: 'job-urgent',
   highestQualification: '12th',
   instituteName: 'Government ITI, Satpur (Nashik)',
-  tradeOrField: 'Automobile & EV / Data Engineering',
+  tradeOrField: 'Automobile & EV / Mechanical',
   currentStatus: 'studying',
   workExperienceYears: 0,
-  sectorsOfInterest: ['Data Engineering & Cloud', 'Automobile & EV', 'Solar & Renewable Energy'],
+  sectorsOfInterest: ['Automobile & EV', 'Solar & Renewable Energy'],
   district: 'Nashik',
   liteMode: false,
   language: 'en',
   onboardingCompleted: true,
-  savedCourseIds: ['c-data-eng', 'c-ev-powertrain'],
+  savedCourseIds: ['c-ev-powertrain', 'c-cnc-machining'],
   points: 540,
   rank: 47,
   pointsToNextRank: 120,
@@ -105,6 +105,89 @@ export const DEFAULT_CANDIDATE_PROFILE: CandidateProfile = {
     ]
   }
 };
+
+/**
+ * Pre-configured Demo Profile for Computer Science, IT & Cybersecurity Candidate
+ */
+export const DEMO_CYBER_CANDIDATE_PROFILE: CandidateProfile = {
+  id: 'cand_it_102',
+  name: 'Rahul Sharma',
+  displayName: 'Rahul S.',
+  isAnonymous: false,
+  email: 'rahul.sharma@example.in',
+  phone: '+91 98201 54321',
+  aim: 'job-urgent',
+  highestQualification: 'Polytechnic Diploma',
+  instituteName: 'Government Polytechnic, Pune',
+  tradeOrField: 'Computer Science & Cybersecurity Operations',
+  currentStatus: 'studying',
+  workExperienceYears: 0,
+  sectorsOfInterest: ['IT / Software', 'Cybersecurity & Cloud', 'Data Engineering & Cloud'],
+  district: 'Pune',
+  liteMode: false,
+  language: 'en',
+  onboardingCompleted: true,
+  savedCourseIds: ['c-cloud-cyber', 'c-cyber-defense-analyst', 'c-data-eng'],
+  points: 580,
+  rank: 32,
+  pointsToNextRank: 70,
+  domainAssessment: {
+    domainName: 'Computer Science, IT & Cyber Security Operations',
+    assessedScore: 74,
+    overallLevel: 'Practitioner',
+    industryMatchPercent: 91,
+    lastAssessedDate: '2026-09-07',
+    skills: [
+      {
+        skillName: 'Network Security & Protocol Analysis (Wireshark/TCP)',
+        candidateLevel: 3,
+        industryDemandedLevel: 5,
+        gap: 2,
+        districtDeficitPercent: 78,
+        recommendedAction: 'Complete Virtual Lab Sandbox Module: Network Intrusion & Packet Forensics'
+      },
+      {
+        skillName: 'Linux Shell Scripting & Server Hardening',
+        candidateLevel: 3,
+        industryDemandedLevel: 4,
+        gap: 1,
+        districtDeficitPercent: 68,
+        recommendedAction: 'Take 2-Week Micro-Certification: Enterprise Linux Security & Bash'
+      },
+      {
+        skillName: 'SIEM Incident Detection & Log Analysis (Splunk/ELK)',
+        candidateLevel: 2,
+        industryDemandedLevel: 4,
+        gap: 2,
+        districtDeficitPercent: 84,
+        recommendedAction: 'Enroll in SOC Operator Simulation at Govt ITI / CDAC'
+      },
+      {
+        skillName: 'Python Automation & REST API Security',
+        candidateLevel: 4,
+        industryDemandedLevel: 4,
+        gap: 0,
+        districtDeficitPercent: 38,
+        recommendedAction: 'Proficiency matched! Verified for NAPS Tech Apprenticeships.'
+      }
+    ]
+  }
+};
+
+export const DEMO_PROFILES = [
+  {
+    id: 'cyber',
+    label: 'Rahul Sharma — Computer Science & Cybersecurity (Pune)',
+    profile: DEMO_CYBER_CANDIDATE_PROFILE,
+    domain: 'Computer & IT / Cybersecurity'
+  },
+  {
+    id: 'auto',
+    label: 'Samir Shaw — Automobile & EV Powertrain (Nashik)',
+    profile: DEFAULT_CANDIDATE_PROFILE,
+    domain: 'Automobile & EV'
+  }
+];
 
 // TODO: replace with API call to /api/stats/local-outlook?district={district}&sectors={sectors}
 export const MOCK_LOCAL_STATS = {
@@ -230,6 +313,60 @@ export const MOCK_OUTLOOK_SECTORS: OutlookSector[] = [
 
 // TODO: replace with API call to /api/courses/recommended?district={district}&aim={aim}&status={status}
 export const MOCK_COURSES: CourseItem[] = [
+  {
+    id: 'c-cyber-defense-analyst',
+    name: 'Cyber Security SOC Analyst & Threat Intelligence Specialist',
+    marathiName: 'सायबर सुरक्षा सॉक अ‍ॅनालिस्ट व थ्रेट इंटेलिजन्स तज्ज्ञ',
+    district: 'Pune',
+    institute: 'Maharashtra Cyber Command Center & Govt Polytechnic Pune',
+    duration: '1 Year (Industry Co-Certified Advanced Specialization)',
+    sector: 'IT & Cybersecurity',
+    status: 'High demand',
+    placementRate: 95,
+    avgStartingSalary: '₹38,000/month',
+    personalizationBadge: 'Top Tier • Verified Cyber Security Specialization',
+    virtualLabAvailable: true,
+    virtualLabTitle: 'SIEM Splunk & Wireshark Packet Forensics Sandbox',
+    virtualLabUrl: 'https://vlab.mahacyber.gov.in/siem-forensics',
+    description: 'Master network perimeter defense, SIEM log monitoring (Splunk/ELK), Linux shell security hardening, and OWASP Top 10 vulnerability assessment for corporate & banking security operation centres.',
+    marathiDescription: 'नेटवर्क डिफेन्स, सॉक मॉनिटरिंग, लिनक्स सर्व्हर सुरक्षा आणि बँकिंग सायबर ऑपरेशन्सचे प्रगत प्रात्यक्षिक प्रशिक्षण.',
+    curriculumHighlights: [
+      'Linux Kernel Hardening & Bash Threat Scripting',
+      'SIEM Splunk / ELK Live Incident Log Telemetry',
+      'OWASP Top 10 Web Application Penetration Testing',
+      'Zero Trust Network Access & ISO 27001 Controls'
+    ],
+    eligibility: '12th Pass (Science) / Poly Diploma or Graduate in CS/IT/Electronics',
+    seatsTotal: 45,
+    seatsAvailable: 6
+  },
+  {
+    id: 'c-fullstack-cloud-dev',
+    name: 'Full-Stack Software Development & Cloud Microservices',
+    marathiName: 'फुल-स्टॅक सॉफ्टवेअर डेव्हलपमेंट व क्लाऊड मायक्रोसर्व्हिसेस',
+    district: 'Pune',
+    institute: 'Maharashtra State Skill University (MSSU), Pune Tech Cluster',
+    duration: '1 Year (Advanced Diploma + 6-Month Industry Project)',
+    sector: 'IT & Software',
+    status: 'High demand',
+    placementRate: 94,
+    avgStartingSalary: '₹35,000/month',
+    personalizationBadge: 'Highest Industry Demand in Hinjawadi Tech Parks',
+    virtualLabAvailable: true,
+    virtualLabTitle: 'Docker Containerized Cloud API Sandbox',
+    virtualLabUrl: 'https://vlab.mssu.ac.in/fullstack-cloud',
+    description: 'Build enterprise web platforms using React, TypeScript, Python backend APIs, PostgreSQL, Docker containerization, and automated CI/CD deployment on AWS.',
+    marathiDescription: 'रिअ‍ॅक्ट, पायथन बॅकएंड, क्लाऊड डेटाबेस आणि डॉकर कंटेनरचे उद्योग-प्रमाणित सॉफ्टवेअर कोडिंग काम.',
+    curriculumHighlights: [
+      'TypeScript, React 19 & Next.js Architecture',
+      'Python Fast-API & Microservices Architecture',
+      'Docker Containers & AWS Cloud Architecture',
+      'Automated CI/CD Pipelines & Secure Coding'
+    ],
+    eligibility: 'Diploma / Graduate in CS/IT/B.Sc or 12th with coding basics',
+    seatsTotal: 50,
+    seatsAvailable: 8
+  },
   {
     id: 'c-embedded-robotics-eng',
     name: 'Embedded Systems & Industrial Robotics Hardware Engineer',
@@ -584,6 +721,47 @@ export const MOCK_COURSES: CourseItem[] = [
         'Direct industry demand in Nashik & Waluj MIDC'
       ]
     }
+  },
+  {
+    id: 'c-copa-legacy',
+    name: 'COPA - Legacy Manual Data Entry & DOS Word Processing',
+    marathiName: 'पारंपरिक डेटा एन्ट्री व मॅन्युअल टायपिंग (सीओपीए)',
+    district: 'Pune',
+    institute: 'Legacy Vocational Center, Pune',
+    duration: '1 Year (Outdated Syllabus)',
+    sector: 'IT & Software',
+    status: 'Obsolete',
+    placementRate: 24,
+    avgStartingSalary: '₹8,500/month',
+    personalizationBadge: '⚠️ Critical Syllabus Obsolescence Alert',
+    isFlagged: true,
+    description: 'Focuses on manual keypunching, numeric keypad typing drills, and outdated desktop spreadsheets. Modern companies use automated OCR and cloud pipelines.',
+    marathiDescription: 'पारंपरिक मॅन्युअल टायपिंग आणि डेटा एन्ट्री; आता एआय आणि क्लाऊड ऑटोमेशनमुळे या जागा संपल्या आहेत.',
+    curriculumHighlights: [
+      '30 WPM Manual English Typing',
+      'DOS Command Line Basics',
+      'Basic Spreadsheet Cell Formatting'
+    ],
+    eligibility: '10th Pass',
+    seatsTotal: 100,
+    seatsAvailable: 68,
+    obsolescenceWarning: {
+      reason: 'Automated OCR, generative AI platforms, and cloud databases reduced manual data entry clerk openings by 78%. Average salary is stagnant under ₹8,500/month.',
+      marathiReason: 'एआय टूल्स व क्लाऊड सॉफ्टवेअरमुळे मॅन्युअल डेटा एन्ट्रीची भरती ७८% घटली असून वेतन अवघे ₹८,५०० आहे. सायबर सुरक्षा व क्लाऊड तंत्रज्ञानाची गरज आहे.',
+      placementDrop: 'Down from 82% in 2017 to 24% in 2025',
+      jobWaitMonths: '15.4 months average job search time',
+      startingPayOld: '₹8,500/month',
+      alternativeCourseId: 'c-cloud-cyber',
+      alternativeCourseName: 'Cloud Infrastructure & Cyber Security SOC Operator',
+      marathiAlternativeName: 'क्लाऊड इन्फ्रास्ट्रक्चर व सायबर सुरक्षा सॉक ऑपरेटर',
+      betterPlacementRate: 89,
+      betterAvgStartingSalary: '₹27,000/month',
+      modernSkillsAdded: [
+        'Linux Administration & Shell Scripting',
+        'SIEM Security Operations & AWS Cloud Management',
+        '89% Placement in Pune Hinjawadi IT Hub'
+      ]
+    }
   }
 ];
 
@@ -712,6 +890,45 @@ export const MOCK_SKILL_PASSPORT: SkillPassportItem[] = [
 
 // TODO: replace with API call to /api/jobs/matched?district={district}&passportId={id}
 export const MOCK_MATCHED_JOBS: JobMatchItem[] = [
+  {
+    id: 'job-cyber-1',
+    title: 'Junior Cyber Security SOC Analyst — Incident Monitoring',
+    marathiTitle: 'कनिष्ठ सायबर सुरक्षा सॉक अ‍ॅनालिस्ट — इन्सिडेंट मॉनिटरिंग',
+    company: 'Quick Heal Technologies / Maharashtra Cyber Command Centre',
+    location: 'Pune (Viman Nagar / Magarpatta), Maharashtra',
+    type: 'Full-time',
+    stipend: '₹28,000 – ₹34,000/month + Certification Allowance',
+    matchScore: 96,
+    requiredSkills: ['Linux Administration', 'Network Protocols (TCP/IP)', 'SIEM Log Analysis', 'Vulnerability Assessment'],
+    deadline: '24 Sept 2026',
+    openings: 32
+  },
+  {
+    id: 'job-cyber-2',
+    title: 'NAPS Graduate Apprentice — Cloud Infrastructure & SecOps',
+    marathiTitle: 'NAPS शिकाऊ उमेदवार — क्लाऊड इन्फ्रास्ट्रक्चर व सेकऑप्स',
+    company: 'Tata Communications Ltd / Persistent Systems',
+    location: 'Pune (Hinjawadi Phase 1), Maharashtra',
+    type: 'NAPS Apprenticeship',
+    stipend: '₹22,000/month + Subsidized Transport & Canteen',
+    matchScore: 92,
+    requiredSkills: ['AWS / Azure Cloud Basics', 'Python / Bash Scripting', 'Firewall Rules', 'Docker Containers'],
+    deadline: '28 Sept 2026',
+    openings: 45
+  },
+  {
+    id: 'job-cyber-3',
+    title: 'Junior Python Software Developer & API Security Associate',
+    marathiTitle: 'कनिष्ठ पायथन सॉफ्टवेअर डेव्हलपर व एपीआय सुरक्षा',
+    company: 'CDAC (Centre for Development of Advanced Computing), Pune',
+    location: 'Pune (Pashan / University Rd), Maharashtra',
+    type: 'Apprenticeship',
+    stipend: '₹30,000/month + Medical Insurance',
+    matchScore: 89,
+    requiredSkills: ['Python', 'SQL & Database Design', 'Git Version Control', 'REST API Security'],
+    deadline: '30 Sept 2026',
+    openings: 18
+  },
   {
     id: 'job-1',
     title: 'NAPS Graduate Apprentice — EV Powertrain Diagnostics',

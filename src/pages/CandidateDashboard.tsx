@@ -3,9 +3,12 @@ import { useAuth } from '../context/AuthContext';
 import { CandidateProfile, CourseItem } from '../types/candidate';
 import {
   DEFAULT_CANDIDATE_PROFILE,
+  DEMO_CYBER_CANDIDATE_PROFILE,
   MOCK_COURSES
 } from '../data/candidateMockData';
 import { SupportedLang, TRANSLATIONS } from '../data/candidateTranslations';
+import { detectDomain } from '../utils/candidateDomain';
+import { Laptop, Car, Sparkles, RefreshCw, CheckCircle2 } from 'lucide-react';
 
 // Sub-components
 import { CandidateHeader } from '../components/candidate/CandidateHeader';
@@ -20,7 +23,7 @@ import { CommunityLeaderboard } from '../components/candidate/CommunityLeaderboa
 import { AskSetuFloatingChat } from '../components/candidate/AskSetuFloatingChat';
 
 // Modals
-import { CandidateOnboardingModal } from '../components/candidate/CandidateOnboardingModal';
+import { CandidateConversationalSurveyModal } from '../components/candidate/CandidateConversationalSurveyModal';
 import { StreakModal } from '../components/candidate/StreakModal';
 import { CourseCompareModal } from '../components/candidate/CourseCompareModal';
 import { CandidateProfileModal } from '../components/candidate/CandidateProfileModal';
@@ -37,7 +40,21 @@ export const CandidateDashboard: React.FC = () => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        return {
+          ...DEFAULT_CANDIDATE_PROFILE,
+          ...parsed,
+          id: parsed.id || DEFAULT_CANDIDATE_PROFILE.id,
+          name: parsed.name || DEFAULT_CANDIDATE_PROFILE.name,
+          displayName: parsed.displayName || parsed.name || DEFAULT_CANDIDATE_PROFILE.displayName,
+          district: parsed.district || DEFAULT_CANDIDATE_PROFILE.district,
+          sectorsOfInterest: Array.isArray(parsed.sectorsOfInterest) && parsed.sectorsOfInterest.length > 0
+            ? parsed.sectorsOfInterest
+            : DEFAULT_CANDIDATE_PROFILE.sectorsOfInterest,
+          savedCourseIds: Array.isArray(parsed.savedCourseIds)
+            ? parsed.savedCourseIds
+            : DEFAULT_CANDIDATE_PROFILE.savedCourseIds
+        };
       } catch (e) {
         console.error('Failed to parse candidate profile from storage', e);
       }
@@ -78,9 +95,11 @@ export const CandidateDashboard: React.FC = () => {
   const [compareBaseCourse, setCompareBaseCourse] = useState<CourseItem | null>(null);
   const [selectedDetailCourse, setSelectedDetailCourse] = useState<CourseItem | null>(null);
 
-  // Trigger Onboarding if candidate hasn't completed it
+  // Trigger Onboarding / Conversational Survey if candidate hasn't completed it or right after first login / account creation
   useEffect(() => {
-    if (!profile.onboardingCompleted) {
+    const isNew = localStorage.getItem('kaushal_candidate_new_account') === 'true';
+    const surveyDone = localStorage.getItem('kaushal_candidate_survey_completed') === 'true';
+    if (isNew || !profile.onboardingCompleted || !surveyDone) {
       setIsOnboardingOpen(true);
     }
   }, [profile.onboardingCompleted]);
@@ -110,9 +129,11 @@ export const CandidateDashboard: React.FC = () => {
     setIsCompareOpen(true);
   };
 
-  // Onboarding Complete Handler
+  // Onboarding & Check-In Complete Handler
   const handleOnboardingComplete = (completedData: Partial<CandidateProfile>) => {
     updateProfile(completedData);
+    localStorage.setItem('kaushal_candidate_survey_completed', 'true');
+    localStorage.removeItem('kaushal_candidate_new_account');
     setIsOnboardingOpen(false);
   };
 
@@ -151,10 +172,72 @@ export const CandidateDashboard: React.FC = () => {
           setIsProfileModalOpen(true);
         }}
         onOpenCounselorModal={() => setIsCounselorOpen(true)}
+        onOpenSurveyModal={() => setIsOnboardingOpen(true)}
       />
 
       {/* Main Content Area */}
       <main className="flex-1">
+        {/* Demo Persona Switcher Banner for rapid user testing */}
+        <div className="bg-slate-900 text-white border-b border-slate-800 px-4 py-2.5">
+          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs">
+            <div className="flex items-center space-x-2">
+              <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-800 text-blue-100 font-extrabold uppercase text-[10px] tracking-wider">
+                Testing Mode
+              </span>
+              <span className="text-slate-300">
+                Active Profile:{' '}
+                <strong className="text-white">
+                  {profile.fullName} ({detectDomain(profile) === 'it_cyber' ? 'Cybersecurity & Software' : 'Automobile & EV'})
+                </strong>
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  updateProfile(DEMO_CYBER_CANDIDATE_PROFILE);
+                }}
+                className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-md transition-colors font-medium border ${
+                  detectDomain(profile) === 'it_cyber'
+                    ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                }`}
+                title="Switch to Cyber Security & Software candidate"
+              >
+                <Laptop className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Demo: Cyber &amp; Software</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  updateProfile(DEFAULT_CANDIDATE_PROFILE);
+                }}
+                className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-md transition-colors font-medium border ${
+                  detectDomain(profile) === 'auto_ev'
+                    ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
+                }`}
+                title="Switch to Automobile & EV candidate"
+              >
+                <Car className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Demo: Automobile &amp; EV</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsOnboardingOpen(true)}
+                className="inline-flex items-center space-x-1 px-2 py-1 rounded-md bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 font-medium transition-colors"
+                title="Open 15-Question Onboarding Survey"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Retake Survey</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* 1. Personalized Hero with Course-Check Search & Live Count-ups */}
         <PersonalizedHero
           profile={profile}
@@ -165,6 +248,7 @@ export const CandidateDashboard: React.FC = () => {
         {/* 2. Before You Enroll: Working Live Enrollment-Time Interrupt Demonstration */}
         <EnrollmentInterruptSection
           language={language}
+          profile={profile}
           onSelectAlternative={handleSelectAlternativeFromInterrupt}
         />
 
@@ -173,8 +257,9 @@ export const CandidateDashboard: React.FC = () => {
           profile={profile}
           language={language}
           onSelectSector={sectorName => {
+            const cleanQuery = (sectorName || '').toLowerCase().slice(0, 4);
             const matchedCourse = MOCK_COURSES.find(c =>
-              c.sector.toLowerCase().includes(sectorName.toLowerCase().slice(0, 4))
+              (c.sector || '').toLowerCase().includes(cleanQuery)
             );
             if (matchedCourse) {
               setSelectedDetailCourse(matchedCourse);
@@ -197,8 +282,10 @@ export const CandidateDashboard: React.FC = () => {
           profile={profile}
           language={language}
           onExplore={() => {
-            const evCourse = MOCK_COURSES.find(c => c.id === 'c-ev-powertrain');
-            if (evCourse) setSelectedDetailCourse(evCourse);
+            const domain = detectDomain(profile);
+            const targetCourseId = domain === 'it_cyber' ? 'c-cloud-cyber' : 'c-ev-powertrain';
+            const matchedCourse = MOCK_COURSES.find(c => c.id === targetCourseId);
+            if (matchedCourse) setSelectedDetailCourse(matchedCourse);
           }}
         />
 
@@ -206,7 +293,7 @@ export const CandidateDashboard: React.FC = () => {
         <MatchedJobsSection
           profile={profile}
           language={language}
-          onViewJob={() => setIsCounselorOpen(true)}
+          district={profile.district}
         />
 
         {/* 7. Verified Skill Passport & DigiLocker Sync */}
@@ -260,10 +347,12 @@ export const CandidateDashboard: React.FC = () => {
       />
 
       {/* --- MODALS --- */}
-      {/* 1. Onboarding Questionnaire */}
-      <CandidateOnboardingModal
+      {/* 1. Conversational Skill & Aim Check-In (Part A - Max 15 adaptive questions) */}
+      <CandidateConversationalSurveyModal
         isOpen={isOnboardingOpen}
+        onClose={() => setIsOnboardingOpen(false)}
         onCancel={() => setIsOnboardingOpen(false)}
+        existingProfile={profile}
         initialProfile={profile}
         onComplete={handleOnboardingComplete}
       />

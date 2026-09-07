@@ -18,7 +18,7 @@ export const OutlookLedger: React.FC<OutlookLedgerProps> = ({
   const t = TRANSLATIONS[language];
 
   // Reorder sectors to prioritize candidate's interests
-  const userInterests = profile.sectorsOfInterest || [];
+  const userInterests = Array.isArray(profile?.sectorsOfInterest) ? profile.sectorsOfInterest : [];
 
   const sortWithUserPreference = (sectors: OutlookSector[]) => {
     return [...sectors].sort((a, b) => {
@@ -59,7 +59,7 @@ export const OutlookLedger: React.FC<OutlookLedgerProps> = ({
           <div className="text-[11px] text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg shrink-0">
             <span>Prioritized by: </span>
             <span className="font-bold text-slate-800">
-              {userInterests.slice(0, 2).join(', ') || 'Your Trade'}
+              {(userInterests || []).slice(0, 2).join(', ') || 'Your Trade'}
             </span>
           </div>
         </div>

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { CourseItem } from '../../types/candidate';
+import React, { useState, useEffect } from 'react';
+import { CourseItem, CandidateProfile } from '../../types/candidate';
 import { MOCK_COURSES } from '../../data/candidateMockData';
 import { SupportedLang, TRANSLATIONS } from '../../data/candidateTranslations';
+import { detectDomain } from '../../utils/candidateDomain';
 import {
   AlertTriangle,
   ArrowRight,
@@ -16,23 +17,36 @@ import {
 
 interface EnrollmentInterruptSectionProps {
   language: SupportedLang;
+  profile?: CandidateProfile;
   onSelectAlternative: (alternativeCourseId: string) => void;
 }
 
 export const EnrollmentInterruptSection: React.FC<EnrollmentInterruptSectionProps> = ({
   language,
+  profile,
   onSelectAlternative
 }) => {
   const t = TRANSLATIONS[language];
+  const domain = profile ? detectDomain(profile) : 'auto_ev';
 
   // Flagged courses for demonstration
   const flaggedCourses = MOCK_COURSES.filter(
     c => c.status === 'Obsolete' || c.status === 'Oversupplied'
   );
 
-  const [selectedFlaggedId, setSelectedFlaggedId] = useState<string>(
-    flaggedCourses[0]?.id || 'c-ice-mechanic'
-  );
+  const preferredFlaggedId =
+    domain === 'it_cyber'
+      ? 'c-copa-legacy'
+      : domain === 'solar_renewable'
+      ? 'c-bench-fitter'
+      : 'c-ice-mechanic';
+
+  const [selectedFlaggedId, setSelectedFlaggedId] = useState<string>(preferredFlaggedId);
+
+  // Keep synced if profile switches
+  useEffect(() => {
+    setSelectedFlaggedId(preferredFlaggedId);
+  }, [preferredFlaggedId]);
 
   const activeCourse =
     flaggedCourses.find(c => c.id === selectedFlaggedId) || flaggedCourses[0];

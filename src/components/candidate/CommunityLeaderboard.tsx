@@ -36,15 +36,16 @@ export const CommunityLeaderboard: React.FC<CommunityLeaderboardProps> = ({
   const [showPointsModal, setShowPointsModal] = useState(false);
 
   // Filter entries
-  const filteredEntries = MOCK_LEADERBOARD_ENTRIES.filter(entry => {
+  const candidateDistrict = (profile?.district || 'Pune').toLowerCase();
+  const filteredEntries = (MOCK_LEADERBOARD_ENTRIES || []).filter(entry => {
     if (scope === 'district' && !entry.isCurrentUser) {
-      return entry.district.toLowerCase() === profile.district.toLowerCase();
+      return (entry.district || '').toLowerCase() === candidateDistrict;
     }
     return true;
   });
 
   // Ensure top 3 + current user
-  const topList = filteredEntries.slice(0, 5);
+  const topList = (filteredEntries || []).slice(0, 5);
 
   return (
     <section className="bg-white py-8 px-4 sm:px-6 border-b border-slate-200">

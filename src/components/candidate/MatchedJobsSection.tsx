@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { JobMatchItem } from '../../types/candidate';
+import React, { useState, useMemo } from 'react';
+import { JobMatchItem, CandidateProfile } from '../../types/candidate';
 import { MOCK_MATCHED_JOBS } from '../../data/candidateMockData';
 import { SupportedLang, TRANSLATIONS } from '../../data/candidateTranslations';
+import { rankJobsForCandidate, detectDomain } from '../../utils/candidateDomain';
 import {
   Briefcase,
   MapPin,
@@ -12,21 +13,32 @@ import {
   Sparkles,
   Building,
   Users,
-  X
+  X,
+  ShieldCheck
 } from 'lucide-react';
 
 interface MatchedJobsSectionProps {
   language: SupportedLang;
   district: string;
+  profile?: CandidateProfile;
 }
 
 export const MatchedJobsSection: React.FC<MatchedJobsSectionProps> = ({
   language,
-  district
+  district,
+  profile
 }) => {
   const t = TRANSLATIONS[language];
   const [selectedJob, setSelectedJob] = useState<JobMatchItem | null>(null);
   const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
+
+  // Rank jobs based on candidate's profile and trade domain
+  const matchedJobs = useMemo(() => {
+    if (!profile) return MOCK_MATCHED_JOBS;
+    return rankJobsForCandidate(MOCK_MATCHED_JOBS, profile);
+  }, [profile]);
+
+  const domain = profile ? detectDomain(profile) : 'auto_ev';
 
   const handleApply = (jobId: string) => {
     setAppliedJobIds(prev => [...prev, jobId]);
@@ -51,14 +63,26 @@ export const MatchedJobsSection: React.FC<MatchedJobsSectionProps> = ({
               {t.matchedJobsSubtitle}
             </p>
           </div>
-          <span className="text-xs text-slate-500 font-medium">
-            National Apprenticeship Promotion Scheme (NAPS) & NCS Verified
-          </span>
+          <div className="flex flex-col sm:items-end gap-1">
+            <span className="text-xs text-slate-500 font-medium">
+              National Apprenticeship Promotion Scheme (NAPS) & NCS Verified
+            </span>
+            <span className="inline-flex items-center space-x-1 text-xs bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-300">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>
+                {domain === 'it_cyber'
+                  ? 'Matched to Cyber & Software Profile'
+                  : domain === 'solar_renewable'
+                  ? 'Matched to Solar & Green Energy Profile'
+                  : 'Matched to Automobile & EV Profile'}
+              </span>
+            </span>
+          </div>
         </div>
 
         {/* Job Listings Rows */}
         <div className="space-y-3">
-          {MOCK_MATCHED_JOBS.map(job => {
+          {matchedJobs.map(job => {
             const hasApplied = appliedJobIds.includes(job.id);
 
             return (

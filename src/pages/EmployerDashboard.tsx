@@ -28,8 +28,12 @@ import {
   MessageSquare,
   Search,
   SlidersHorizontal,
-  ChevronRight
+  ChevronRight,
+  Vote
 } from 'lucide-react';
+import { EmployerConversationalSurveyModal } from '../components/employer/EmployerConversationalSurveyModal';
+import { INITIAL_EMPLOYER_SUGGESTIONS } from '../data/questionnairesData';
+import { EmployerSuggestionItem } from '../types/questionnaire';
 
 interface EmployerSurveyState {
   spocEmail: string;
@@ -87,6 +91,100 @@ export const EmployerDashboard: React.FC = () => {
   const showToast = (msg: string) => {
     setToastMsg(msg);
     setTimeout(() => setToastMsg(null), 4000);
+  };
+
+  // Conversational Check-In (Part B) Modal State
+  const [isEmployerSurveyOpen, setIsEmployerSurveyOpen] = useState(false);
+
+  // Suggestions & Live Upvoting State for Curriculum Tab (Q22/Q23 telemetry)
+  const [suggestions, setSuggestions] = useState<EmployerSuggestionItem[]>(() => {
+    try {
+      const stored = localStorage.getItem('kaushal_employer_suggestions');
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return INITIAL_EMPLOYER_SUGGESTIONS;
+  });
+
+  const [votedIds, setVotedIds] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem('kaushal_employer_voted_ids');
+      if (stored) return JSON.parse(stored);
+    } catch {}
+    return [];
+  });
+
+  const [curriculumFilterSector, setCurriculumFilterSector] = useState<string>('All');
+  const [newSyllabusProposal, setNewSyllabusProposal] = useState('');
+  const [selectedProposalSector, setSelectedProposalSector] = useState('Automotive & EV Manufacturing');
+
+  // Trigger on first login / account creation
+  React.useEffect(() => {
+    const isNew = localStorage.getItem('kaushal_employer_new_account') === 'true';
+    const surveyDone = localStorage.getItem('kaushal_employer_survey_completed') === 'true';
+    if (isNew || !surveyDone) {
+      setIsEmployerSurveyOpen(true);
+    }
+  }, []);
+
+  const handleToggleUpvote = (id: string) => {
+    setSuggestions(prev => {
+      const isVoted = votedIds.includes(id);
+      const updated = prev.map(s => {
+        if (s.id === id) {
+          return {
+            ...s,
+            upvotes: isVoted ? s.upvotes - 1 : s.upvotes + 1
+          };
+        }
+        return s;
+      });
+      try {
+        localStorage.setItem('kaushal_employer_suggestions', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    setVotedIds(prev => {
+      const isVoted = prev.includes(id);
+      const updated = isVoted ? prev.filter(v => v !== id) : [...prev, id];
+      try {
+        localStorage.setItem('kaushal_employer_voted_ids', JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+  };
+
+  const handleAddSyllabusProposal = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSyllabusProposal.trim()) return;
+    const newSug: EmployerSuggestionItem = {
+      id: `sug-${Date.now()}`,
+      sector: selectedProposalSector,
+      text: newSyllabusProposal.trim(),
+      upvotes: 1,
+      submittedBy: `${user?.orgName || survey.orgName} (${user?.userName || survey.spocName})`,
+      timestamp: 'Just now'
+    };
+    const updated = [newSug, ...suggestions];
+    setSuggestions(updated);
+    setVotedIds(prev => [...prev, newSug.id]);
+    try {
+      localStorage.setItem('kaushal_employer_suggestions', JSON.stringify(updated));
+    } catch {}
+    setNewSyllabusProposal('');
+    showToast('Your curriculum change proposal was submitted to the state review board and opened for peer employer voting!');
+  };
+
+  const handleEmployerSurveyComplete = (answers: Record<string, any>) => {
+    localStorage.setItem('kaushal_employer_survey_completed', 'true');
+    localStorage.removeItem('kaushal_employer_new_account');
+    setIsEmployerSurveyOpen(false);
+    showToast('Part B Check-In & Syllabus Votes recorded! Response ingested into Maharashtra Skill Gap & Curriculum Advisory Engine.');
+    // Reload suggestions from localStorage if updated during survey
+    try {
+      const stored = localStorage.getItem('kaushal_employer_suggestions');
+      if (stored) setSuggestions(JSON.parse(stored));
+    } catch {}
   };
 
   // Form State for PDF Annexure 2 Questionnaire
@@ -272,7 +370,14 @@ export const EmployerDashboard: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <button
+                onClick={() => setIsEmployerSurveyOpen(true)}
+                className="px-4 py-2.5 rounded-lg bg-[#0C2340] hover:bg-blue-900 text-amber-300 text-xs font-bold shadow-xs transition flex items-center gap-1.5 border border-amber-500/40"
+              >
+                <Vote className="w-4 h-4 text-amber-400" />
+                <span>Conversational Check-In &amp; Voting (Part B)</span>
+              </button>
               <button
                 onClick={() => setShowNewJobModal(true)}
                 className="px-4 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-xs transition flex items-center gap-1.5"
@@ -391,6 +496,35 @@ export const EmployerDashboard: React.FC = () => {
               <div className="text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-slate-600 font-mono">
                 MSSDS Survey ID: <strong className="text-slate-900">MSNAS-2023-IND-884</strong>
               </div>
+            </div>
+
+            {/* Fast-Track Conversational Check-In Callout */}
+            <div className="p-4 bg-gradient-to-r from-[#0C2340] to-blue-900 rounded-xl text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md border border-amber-500/30">
+              <div className="flex items-start space-x-3.5">
+                <div className="p-2.5 bg-amber-400/20 text-amber-300 rounded-xl shrink-0">
+                  <Vote className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                      Adaptive Check-In (Part B)
+                    </span>
+                    <span className="text-xs text-emerald-300 font-semibold">&bull; 12–14 Adaptive Questions</span>
+                  </div>
+                  <h4 className="text-sm font-bold text-white mt-1">Prefer a friendly check-in with live syllabus voting?</h4>
+                  <p className="text-xs text-slate-200 mt-0.5 leading-relaxed max-w-2xl">
+                    Skip static government form tables. Complete our adaptive conversational check-in to forecast skill demands and vote on ITI curriculum modernization proposals.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEmployerSurveyOpen(true)}
+                className="shrink-0 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs rounded-lg shadow-sm transition flex items-center space-x-1.5"
+              >
+                <span>Launch Check-In &amp; Voting</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
 
             <form onSubmit={handleSurveySubmit} className="space-y-6">
@@ -714,73 +848,240 @@ export const EmployerDashboard: React.FC = () => {
 
         {/* Tab 3: Curriculum Co-Design & Validation Desk */}
         {activeTab === 'curriculum' && (
-          <div className="bg-white rounded-b-xl border border-t-0 border-slate-200 p-6 sm:p-8 space-y-6 shadow-xs">
-            <div className="pb-4 border-b border-slate-100">
-              <h2 className="text-xl font-extrabold text-[#0C2340]">
-                Employer Curriculum Advisory &amp; Competency Endorsement
-              </h2>
-              <p className="text-xs text-slate-600 mt-1">
-                Review proposed 120-hour modular course updates submitted by ITIs, Polytechnics, and VTPs in Maharashtra. Your validation directly certifies trades for state licensing.
-              </p>
+          <div className="bg-white rounded-b-xl border border-t-0 border-slate-200 p-6 sm:p-8 space-y-8 shadow-xs">
+            {/* Header & Context */}
+            <div className="pb-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-100 text-blue-900">
+                    Live Employer Telemetry
+                  </span>
+                  <span className="text-xs text-amber-800 bg-amber-50 px-2 py-0.5 rounded font-semibold border border-amber-200">
+                    Part B Question 22 &amp; 23 Ingestion
+                  </span>
+                </div>
+                <h2 className="text-xl font-extrabold text-[#0C2340] mt-1.5">
+                  Employer Curriculum Advisory &amp; Live Syllabus Voting Board
+                </h2>
+                <p className="text-xs text-slate-600 mt-1">
+                  Co-designing Maharashtra vocational curricula. Real-time employer upvotes rank syllabus modernizations for the State Review Council.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsEmployerSurveyOpen(true)}
+                className="shrink-0 px-4 py-2 bg-[#0C2340] hover:bg-blue-900 text-amber-300 font-bold text-xs rounded-lg shadow-xs transition flex items-center space-x-1.5 border border-amber-500/40"
+              >
+                <Vote className="w-4 h-4 text-amber-400" />
+                <span>Open Full Part B Survey</span>
+              </button>
             </div>
 
-            <div className="space-y-4">
-              {curriculumProposals.map((proposal) => (
-                <div key={proposal.id} className="p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/60">
-                    <div className="flex items-center space-x-2">
-                      <span className="px-2 py-0.5 rounded bg-blue-900 text-white font-mono text-[10px] font-bold">
-                        {proposal.id}
-                      </span>
-                      <span className="font-extrabold text-sm text-[#0C2340]">
-                        {proposal.trade}
-                      </span>
-                    </div>
+            {/* SECTION 1: LIVE INDUSTRY PULSE & UPVOTING LEADERBOARD */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+                <div>
+                  <h3 className="text-base font-extrabold text-[#0C2340] flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-600" />
+                    <span>Top Curriculum Change Requests (Ranked by Employer Upvotes)</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Live upvote tallies determining priority additions for upcoming ITI academic cycles.
+                  </p>
+                </div>
 
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs text-slate-500 font-semibold">{proposal.provider}</span>
-                      <span
-                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded ${
-                          proposal.status === 'EMPLOYER VALIDATED'
-                            ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                            : 'bg-amber-100 text-amber-900 border border-amber-300'
+                {/* Sector Filter */}
+                <div className="flex items-center space-x-2 text-xs">
+                  <span className="text-slate-500 font-semibold hidden sm:inline">Filter Sector:</span>
+                  <select
+                    value={curriculumFilterSector}
+                    onChange={(e) => setCurriculumFilterSector(e.target.value)}
+                    className="p-1.5 bg-white border border-slate-300 rounded-md font-medium text-slate-800 text-xs"
+                  >
+                    <option value="All">All Sectors</option>
+                    <option value="Automotive & EV Manufacturing">Automotive &amp; EV</option>
+                    <option value="Capital Goods, CNC & Precision Engineering">Capital Goods &amp; CNC</option>
+                    <option value="Renewable Energy & Solar">Renewable Energy &amp; Solar</option>
+                    <option value="IT / Software & Technology">IT &amp; Software</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Proposals Cards List */}
+              <div className="space-y-3">
+                {suggestions
+                  .filter((s) => curriculumFilterSector === 'All' || s.sector === curriculumFilterSector)
+                  .sort((a, b) => b.upvotes - a.upvotes)
+                  .map((sug, idx) => {
+                    const isVoted = votedIds.includes(sug.id);
+                    return (
+                      <div
+                        key={sug.id}
+                        className={`p-4 rounded-xl border transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                          isVoted
+                            ? 'bg-amber-50/60 border-amber-300 shadow-2xs'
+                            : 'bg-white border-slate-200 hover:border-slate-300'
                         }`}
                       >
-                        {proposal.status}
-                      </span>
-                    </div>
-                  </div>
+                        <div className="space-y-1.5 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="w-5 h-5 rounded-full bg-[#0C2340] text-amber-300 font-extrabold text-[10px] flex items-center justify-center">
+                              #{idx + 1}
+                            </span>
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-900">
+                              {sug.sector}
+                            </span>
+                            <span className="text-[11px] text-slate-400 font-mono">
+                              By {sug.submittedBy} &bull; {sug.timestamp}
+                            </span>
+                          </div>
+                          <p className="text-xs sm:text-sm font-semibold text-slate-800 leading-snug">
+                            &ldquo;{sug.text}&rdquo;
+                          </p>
+                        </div>
 
-                  <div>
-                    <div className="text-xs font-bold text-slate-800">Proposed Modular Skill Annexure:</div>
-                    <p className="text-xs text-slate-700 mt-0.5 font-medium leading-relaxed">
-                      {proposal.proposal}
-                    </p>
-                  </div>
+                        <div className="flex items-center space-x-3 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleUpvote(sug.id)}
+                            className={`px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 ${
+                              isVoted
+                                ? 'bg-amber-600 text-white shadow-xs hover:bg-amber-700 ring-2 ring-amber-400/40'
+                                : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300'
+                            }`}
+                          >
+                            <ThumbsUp className={`w-3.5 h-3.5 ${isVoted ? 'fill-white' : ''}`} />
+                            <span>{sug.upvotes}</span>
+                            <span>{isVoted ? 'Upvoted' : 'Upvote'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
 
-                  <div className="p-3 bg-red-50/70 rounded-lg border border-red-200 text-xs text-red-900 space-y-0.5">
-                    <span className="font-bold flex items-center gap-1 text-red-800">
-                      <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
-                      Obsolete Component Flagged for Sunset:
-                    </span>
-                    <p className="text-slate-700">{proposal.obsoleteTopicsFlagged}</p>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="text-xs text-slate-500">
-                      Endorsed by <strong className="text-slate-800">{proposal.validationsCount} Enterprise Partners</strong> in Maharashtra
-                    </div>
-
-                    <button
-                      onClick={() => handleValidateCurriculum(proposal.id)}
-                      className="px-4 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded text-xs shadow-2xs transition flex items-center gap-1.5"
+              {/* Inline Form to Propose New Syllabus Change */}
+              <form
+                onSubmit={handleAddSyllabusProposal}
+                className="p-4 rounded-xl bg-white border border-dashed border-amber-400/80 space-y-3"
+              >
+                <div className="flex items-center space-x-2">
+                  <Plus className="w-4 h-4 text-amber-600" />
+                  <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                    Submit a New Curriculum Change Proposal (Auto-Enters Live Voting)
+                  </h4>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+                  <div className="sm:col-span-1">
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">Target Sector</label>
+                    <select
+                      value={selectedProposalSector}
+                      onChange={(e) => setSelectedProposalSector(e.target.value)}
+                      className="w-full p-2 bg-slate-50 border border-slate-300 rounded-md font-medium text-slate-900"
                     >
-                      <ThumbsUp className="w-3.5 h-3.5" />
-                      <span>Validate &amp; Endorse Competency</span>
-                    </button>
+                      <option value="Automotive & EV Manufacturing">Automotive &amp; EV</option>
+                      <option value="Capital Goods, CNC & Precision Engineering">Capital Goods &amp; CNC</option>
+                      <option value="Renewable Energy & Solar">Renewable Energy &amp; Solar</option>
+                      <option value="IT / Software & Technology">IT / Software</option>
+                      <option value="Healthcare & Medical Devices">Healthcare &amp; MedTech</option>
+                    </select>
+                  </div>
+                  <div className="sm:col-span-3">
+                    <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                      Specific Module, Equipment, or Practical Topic Needed
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        required
+                        value={newSyllabusProposal}
+                        onChange={(e) => setNewSyllabusProposal(e.target.value)}
+                        placeholder="e.g. Add 40 hours hands-on battery pack disassembly and thermal testing to Motor Mechanic trade"
+                        className="flex-1 p-2 bg-slate-50 border border-slate-300 rounded-md font-medium text-slate-900 text-xs"
+                      />
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-[#0C2340] hover:bg-blue-900 text-amber-300 font-bold text-xs rounded-md shadow-xs shrink-0 flex items-center space-x-1"
+                      >
+                        <Send className="w-3 h-3 text-amber-400" />
+                        <span>Post &amp; Vote</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              ))}
+              </form>
+            </div>
+
+            {/* SECTION 2: INSTITUTIONAL 120-HOUR MODULAR SUBMISSIONS */}
+            <div className="space-y-4 pt-2">
+              <div>
+                <h3 className="text-base font-extrabold text-[#0C2340]">
+                  Institutional 120-Hour Modular Course Endorsement Desk
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Formal modular updates submitted by ITIs, Polytechnics, and VTPs in Maharashtra pending industry sign-off.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {curriculumProposals.map((proposal) => (
+                  <div key={proposal.id} className="p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/60">
+                      <div className="flex items-center space-x-2">
+                        <span className="px-2 py-0.5 rounded bg-blue-900 text-white font-mono text-[10px] font-bold">
+                          {proposal.id}
+                        </span>
+                        <span className="font-extrabold text-sm text-[#0C2340]">
+                          {proposal.trade}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs text-slate-500 font-semibold">{proposal.provider}</span>
+                        <span
+                          className={`text-[10px] font-extrabold px-2 py-0.5 rounded ${
+                            proposal.status === 'EMPLOYER VALIDATED'
+                              ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                              : 'bg-amber-100 text-amber-900 border border-amber-300'
+                          }`}
+                        >
+                          {proposal.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-xs font-bold text-slate-800">Proposed Modular Skill Annexure:</div>
+                      <p className="text-xs text-slate-700 mt-0.5 font-medium leading-relaxed">
+                        {proposal.proposal}
+                      </p>
+                    </div>
+
+                    <div className="p-3 bg-red-50/70 rounded-lg border border-red-200 text-xs text-red-900 space-y-0.5">
+                      <span className="font-bold flex items-center gap-1 text-red-800">
+                        <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
+                        Obsolete Component Flagged for Sunset:
+                      </span>
+                      <p className="text-slate-700">{proposal.obsoleteTopicsFlagged}</p>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2">
+                      <div className="text-xs text-slate-500">
+                        Endorsed by <strong className="text-slate-800">{proposal.validationsCount} Enterprise Partners</strong> in Maharashtra
+                      </div>
+
+                      <button
+                        onClick={() => handleValidateCurriculum(proposal.id)}
+                        className="px-4 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded text-xs shadow-2xs transition flex items-center gap-1.5"
+                      >
+                        <ThumbsUp className="w-3.5 h-3.5" />
+                        <span>Validate &amp; Endorse Competency</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -965,6 +1266,18 @@ export const EmployerDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Conversational Check-In & Syllabus Voting Modal (Part B - Max 14 adaptive questions) */}
+      <EmployerConversationalSurveyModal
+        isOpen={isEmployerSurveyOpen}
+        onClose={() => {
+          setIsEmployerSurveyOpen(false);
+          localStorage.removeItem('kaushal_employer_new_account');
+        }}
+        companyName={user?.orgName || survey.orgName}
+        contactName={user?.userName || survey.spocName}
+        onComplete={handleEmployerSurveyComplete}
+      />
 
       <GovernmentFooter />
     </div>

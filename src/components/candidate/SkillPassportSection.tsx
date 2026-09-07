@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { SkillPassportItem } from '../../types/candidate';
+import React, { useState, useEffect } from 'react';
+import { SkillPassportItem, CandidateProfile } from '../../types/candidate';
 import { MOCK_SKILL_PASSPORT } from '../../data/candidateMockData';
 import { SupportedLang, TRANSLATIONS } from '../../data/candidateTranslations';
+import { detectDomain, getDomainPassportItems } from '../../utils/candidateDomain';
 import {
   ShieldCheck,
   CheckCircle2,
@@ -15,12 +16,24 @@ import {
 
 interface SkillPassportSectionProps {
   language: SupportedLang;
+  profile?: CandidateProfile;
 }
 
-export const SkillPassportSection: React.FC<SkillPassportSectionProps> = ({ language }) => {
+export const SkillPassportSection: React.FC<SkillPassportSectionProps> = ({
+  language,
+  profile
+}) => {
   const t = TRANSLATIONS[language];
+  const domain = profile ? detectDomain(profile) : 'auto_ev';
 
-  const [passportItems, setPassportItems] = useState<SkillPassportItem[]>(MOCK_SKILL_PASSPORT);
+  const [passportItems, setPassportItems] = useState<SkillPassportItem[]>(() =>
+    getDomainPassportItems(domain, language)
+  );
+
+  useEffect(() => {
+    setPassportItems(getDomainPassportItems(domain, language));
+  }, [domain, language]);
+
   const [isDigiLockerConnecting, setIsDigiLockerConnecting] = useState(false);
   const [digiLockerSuccess, setDigiLockerSuccess] = useState(false);
 
@@ -30,17 +43,28 @@ export const SkillPassportSection: React.FC<SkillPassportSectionProps> = ({ lang
     setTimeout(() => {
       setIsDigiLockerConnecting(false);
       setDigiLockerSuccess(true);
-      // Add a newly pulled verified marksheet
-      const newDLItem: SkillPassportItem = {
-        id: 'pass-dl-4',
-        title: 'Higher Secondary Certificate (HSC Vocational Science - 81.2%)',
-        marathiTitle: 'उच्च माध्यमिक प्रमाणपत्र (एचएससी व्होकेशनल सायन्स - ८१.२%)',
-        issuer: 'Maharashtra State Board of Secondary and Higher Secondary Education',
-        issueDate: 'July 2025',
-        verificationId: 'DL-VERIFIED-HSC-2025-0041',
-        verified: true,
-        skillsAcquired: ['Applied Physics', 'Circuit Diagrams', 'Basic Electronics Workshop']
-      };
+      // Add a newly pulled verified marksheet tailored to domain
+      const newDLItem: SkillPassportItem = domain === 'it_cyber'
+        ? {
+            id: 'pass-dl-cyber',
+            title: 'AWS Certified Cloud Practitioner & Linux Foundation Essentials',
+            marathiTitle: 'एडब्ल्यूएस क्लाऊड प्रॅक्टिशनर व लिनक्स फाउंडेशन',
+            issuer: 'Ministry of Electronics & IT (MeitY) via DigiLocker',
+            issueDate: 'July 2025',
+            verificationId: 'DL-MEITY-CYB-2025-8812',
+            verified: true,
+            skillsAcquired: ['Cloud Security Principles', 'IAM Roles & Zero Trust', 'Virtual Private Clouds (VPC)']
+          }
+        : {
+            id: 'pass-dl-4',
+            title: 'Higher Secondary Certificate (HSC Vocational Science - 81.2%)',
+            marathiTitle: 'उच्च माध्यमिक प्रमाणपत्र (एचएससी व्होकेशनल सायन्स - ८१.२%)',
+            issuer: 'Maharashtra State Board of Secondary and Higher Secondary Education',
+            issueDate: 'July 2025',
+            verificationId: 'DL-VERIFIED-HSC-2025-0041',
+            verified: true,
+            skillsAcquired: ['Applied Physics', 'Circuit Diagrams', 'Basic Electronics Workshop']
+          };
       setPassportItems(prev => [newDLItem, ...prev]);
     }, 1200);
   };

@@ -127,7 +127,7 @@ export const CandidateOnboardingModal: React.FC<CandidateOnboardingModalProps> =
       const filtered = MOCK_INSTITUTES.filter(i =>
         i.toLowerCase().includes(val.toLowerCase())
       );
-      setInstituteSuggestions(filtered.slice(0, 4));
+      setInstituteSuggestions((filtered || []).slice(0, 4));
     } else {
       setInstituteSuggestions([]);
     }
@@ -623,7 +623,7 @@ export const CandidateOnboardingModal: React.FC<CandidateOnboardingModalProps> =
                       Building your personalized outlook...
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">
-                      Cross-referencing {district} MIDC employer telemetry with your interest in {sectorsOfInterest.slice(0, 2).join(' & ')}
+                      Cross-referencing {district} MIDC employer telemetry with your interest in {(sectorsOfInterest || []).slice(0, 2).join(' & ')}
                     </p>
                   </div>
                   <div className="w-48 bg-slate-200 h-2 rounded-full mx-auto overflow-hidden">
@@ -643,7 +643,7 @@ export const CandidateOnboardingModal: React.FC<CandidateOnboardingModalProps> =
                       Your Outlook is Ready!
                     </h2>
                     <p className="text-xs sm:text-sm text-slate-700 mt-2 max-w-md mx-auto leading-relaxed bg-blue-50/70 p-3.5 rounded-xl border border-blue-200 font-medium">
-                      Got it — showing you <strong className="text-blue-950 font-bold">{sectorsOfInterest.slice(0, 2).join(' & ')}</strong> courses near{' '}
+                      Got it — showing you <strong className="text-blue-950 font-bold">{(sectorsOfInterest || []).slice(0, 2).join(' & ')}</strong> courses near{' '}
                       <strong className="text-blue-950 font-bold">{district}</strong>, since {getAimSummaryLabel()}.
                     </p>
                   </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { LogIn, UserPlus, Shield, UserCheck, ChevronDown, Award, LogOut, ArrowRight } from 'lucide-react';
@@ -7,6 +7,21 @@ export const BrandHeader: React.FC = () => {
   const { user, logout, language } = useAuth();
   const navigate = useNavigate();
   const [showSignUpDropdown, setShowSignUpDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowSignUpDropdown(false);
+      }
+    };
+    if (showSignUpDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSignUpDropdown]);
 
   const getDashboardRoute = (role: string) => {
     switch (role) {
@@ -24,7 +39,7 @@ export const BrandHeader: React.FC = () => {
   };
 
   return (
-    <div className="w-full bg-white border-b border-slate-200 shadow-[0_2px_4px_rgba(0,0,0,0.03)] relative z-40">
+    <div className={`w-full bg-white border-b border-slate-200 shadow-[0_2px_4px_rgba(0,0,0,0.03)] relative ${showSignUpDropdown ? 'z-[60]' : 'z-50'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 sm:py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Left: Brand Identity & Bridge Motif Logo */}
         <Link to="/" className="flex items-center space-x-3.5 group">
@@ -124,7 +139,7 @@ export const BrandHeader: React.FC = () => {
               </Link>
 
               {/* Sign Up Dropdown / Button */}
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <button
                   type="button"
                   id="btn-nav-signup"
@@ -139,7 +154,7 @@ export const BrandHeader: React.FC = () => {
 
                 {/* Dropdown Menu for Role Signups */}
                 {showSignUpDropdown && (
-                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border border-slate-200 p-2 z-50 text-left">
+                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-2xl border border-slate-200 p-2 z-[70] text-left">
                     <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
                       Public Registration (Role-Based)
                     </div>

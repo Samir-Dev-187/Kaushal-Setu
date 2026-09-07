@@ -53,6 +53,10 @@ export const EmployerSignupPage: React.FC = () => {
       return;
     }
 
+    // Flag for first-login conversational check-in & voting (Part B)
+    localStorage.setItem('kaushal_employer_new_account', 'true');
+    localStorage.setItem('kaushal_employer_survey_completed', 'false');
+
     setPendingUser({
       role: 'employer',
       userId: businessEmail,

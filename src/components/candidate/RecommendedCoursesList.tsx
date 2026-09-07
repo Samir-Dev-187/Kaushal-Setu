@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { CandidateProfile, CourseItem, CourseStatus } from '../../types/candidate';
 import { SupportedLang, TRANSLATIONS } from '../../data/candidateTranslations';
+import { rankCoursesForCandidate, detectDomain } from '../../utils/candidateDomain';
 import {
   Bookmark,
   BookmarkCheck,
@@ -11,7 +12,8 @@ import {
   ArrowRight,
   TrendingUp,
   Scale,
-  Sparkles
+  Sparkles,
+  ShieldCheck
 } from 'lucide-react';
 
 interface RecommendedCoursesListProps {
@@ -32,6 +34,13 @@ export const RecommendedCoursesList: React.FC<RecommendedCoursesListProps> = ({
   onToggleBookmark
 }) => {
   const t = TRANSLATIONS[language];
+
+  // Intelligently rank courses based on candidate's profile, trade, sectors, and domain
+  const sortedCourses = useMemo(() => {
+    return rankCoursesForCandidate(courses, profile);
+  }, [courses, profile]);
+
+  const domain = detectDomain(profile);
 
   // Helper for Status Badges with color + text label for colorblind accessibility
   const renderStatusBadge = (status: CourseStatus) => {
@@ -86,14 +95,23 @@ export const RecommendedCoursesList: React.FC<RecommendedCoursesListProps> = ({
               {t.recommendedSubheading}
             </p>
           </div>
-          <span className="text-xs text-slate-500 font-medium">
-            Showing 6 verified government & polytechnic offerings
-          </span>
+          <div className="flex items-center space-x-2">
+            <span className="inline-flex items-center space-x-1 text-xs bg-blue-100 text-blue-900 font-bold px-2.5 py-1 rounded-full border border-blue-300">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-700" />
+              <span>
+                {domain === 'it_cyber'
+                  ? 'Personalized for: Cyber Security & Software'
+                  : domain === 'solar_renewable'
+                  ? 'Personalized for: Solar & Green Energy'
+                  : 'Personalized for: Automobile & EV'}
+              </span>
+            </span>
+          </div>
         </div>
 
         {/* Course Rows */}
         <div className="space-y-3">
-          {courses.map(course => {
+          {sortedCourses.map(course => {
             const isSaved = profile.savedCourseIds?.includes(course.id);
             const isFlagged = course.status === 'Obsolete' || course.status === 'Oversupplied';
 

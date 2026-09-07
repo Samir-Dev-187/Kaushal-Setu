@@ -21,12 +21,25 @@ export const CourseCompareModal: React.FC<CourseCompareModalProps> = ({
 }) => {
   // All hooks MUST be called before any early return (React Rules of Hooks)
   // Default course 1 is the selected base course or the first flagged course
-  const courseA = baseCourse || MOCK_COURSES.find(c => c.isFlagged) || MOCK_COURSES[4];
+  const courseA = baseCourse || MOCK_COURSES.find(c => c.isFlagged) || MOCK_COURSES[4] || MOCK_COURSES[0];
 
-  // Default comparison course is EV powertrain or Solar PV
-  const [courseBId, setCourseBId] = useState<string>(
-    courseA.id === 'c-ev-powertrain' ? 'c-iiot-electrician' : 'c-ev-powertrain'
-  );
+  const initialB =
+    courseA?.obsolescenceWarning?.recommendedAlternativeId ||
+    (courseA?.sector?.toLowerCase()?.includes('it') || courseA?.name?.toLowerCase()?.includes('cyber')
+      ? 'c-cloud-cyber'
+      : courseA?.id === 'c-ev-powertrain'
+      ? 'c-iiot-electrician'
+      : 'c-ev-powertrain');
+
+  // Default comparison course
+  const [courseBId, setCourseBId] = useState<string>(initialB);
+
+  // Update comparison course if base course changes
+  React.useEffect(() => {
+    if (courseA?.obsolescenceWarning?.recommendedAlternativeId) {
+      setCourseBId(courseA.obsolescenceWarning.recommendedAlternativeId);
+    }
+  }, [courseA?.id]);
 
   const courseB = MOCK_COURSES.find(c => c.id === courseBId) || MOCK_COURSES[0];
 
@@ -151,9 +164,9 @@ export const CourseCompareModal: React.FC<CourseCompareModalProps> = ({
                     onChange={e => setCourseBId(e.target.value)}
                     className="bg-white border border-emerald-300 rounded text-xs px-2 py-0.5 text-slate-800 font-bold"
                   >
-                    {MOCK_COURSES.filter(c => c.id !== courseA.id).map(c => (
+                    {(MOCK_COURSES || []).filter(c => c.id !== courseA?.id).map(c => (
                       <option key={c.id} value={c.id}>
-                        {c.name.slice(0, 30)}...
+                        {(c.name || '').slice(0, 30)}...
                       </option>
                     ))}
                   </select>
@@ -211,12 +224,14 @@ export const CourseCompareModal: React.FC<CourseCompareModalProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    onEnroll(courseB.id);
+                    if (courseB?.id) {
+                      onEnroll(courseB.id);
+                    }
                     onClose();
                   }}
                   className="w-full py-2 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg font-bold text-xs shadow-xs transition-colors flex items-center justify-center space-x-1.5"
                 >
-                  <span>Apply / Enroll in {courseB.name.slice(0, 18)}...</span>
+                  <span>Apply / Enroll in {(courseB?.name || 'Course').slice(0, 18)}...</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>

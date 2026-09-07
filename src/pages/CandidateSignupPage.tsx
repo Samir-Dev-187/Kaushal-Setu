@@ -5,6 +5,7 @@ import { GovernmentHeader } from '../components/layout/GovernmentHeader';
 import { BrandHeader } from '../components/layout/BrandHeader';
 import { GovernmentFooter } from '../components/layout/GovernmentFooter';
 import { MAHARASHTRA_DISTRICTS } from '../data/mockData';
+import { DEFAULT_CANDIDATE_PROFILE } from '../data/candidateMockData';
 import {
   UserPlus,
   User,
@@ -53,6 +54,27 @@ export const CandidateSignupPage: React.FC = () => {
       setErrorMsg('You must agree to the Terms and Privacy Policy.');
       return;
     }
+
+    // Flag for first-login conversational check-in (Part A)
+    localStorage.setItem('kaushal_candidate_new_account', 'true');
+    localStorage.setItem('kaushal_candidate_survey_completed', 'false');
+
+    // Pre-seed candidate profile with basic signup data
+    try {
+      const existing = localStorage.getItem('kaushal_candidate_profile');
+      const parsed = existing ? JSON.parse(existing) : {};
+      localStorage.setItem('kaushal_candidate_profile', JSON.stringify({
+        ...DEFAULT_CANDIDATE_PROFILE,
+        ...parsed,
+        id: `cand-${Date.now()}`,
+        name: fullName,
+        displayName: fullName.split(' ')[0] || fullName,
+        email: email,
+        phone: mobileNumber,
+        district: district,
+        onboardingCompleted: false
+      }));
+    } catch {}
 
     // Set pending user for OTP step
     setPendingUser({

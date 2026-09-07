@@ -145,7 +145,7 @@ export const TrainingCentreProvider: React.FC<{ children: React.ReactNode }> = (
     const newReq: RequestApplicationItem = {
       ...req,
       id: `req-${Date.now()}`,
-      referenceNumber: `REQ-${req.type.slice(0, 3).toUpperCase()}-NSK-${Math.floor(1000 + Math.random() * 9000)}`,
+      referenceNumber: `REQ-${(req.type || 'REQ').slice(0, 3).toUpperCase()}-NSK-${Math.floor(1000 + Math.random() * 9000)}`,
       stageTimeline: [
         { stage: 'Draft Prepared', date: 'Today', completed: true },
         { stage: 'Submitted to DVET', date: 'Today', completed: true, current: true },

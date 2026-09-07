@@ -30,6 +30,7 @@ interface CandidateHeaderProps {
   onOpenSavedCourses: () => void;
   onOpenCounselorModal: () => void;
   onOpenDiagnosticModal?: () => void;
+  onOpenSurveyModal?: () => void;
 }
 
 export const CandidateHeader: React.FC<CandidateHeaderProps> = ({
@@ -41,7 +42,8 @@ export const CandidateHeader: React.FC<CandidateHeaderProps> = ({
   onOpenStreakModal,
   onOpenSavedCourses,
   onOpenCounselorModal,
-  onOpenDiagnosticModal
+  onOpenDiagnosticModal,
+  onOpenSurveyModal
 }) => {
   const navigate = useNavigate();
   const t = TRANSLATIONS[language];
@@ -276,6 +278,19 @@ export const CandidateHeader: React.FC<CandidateHeaderProps> = ({
                     <span>District: {profile.district}</span>
                   </div>
                 </div>
+
+                {onOpenSurveyModal && (
+                  <button
+                    onClick={() => {
+                      setIsProfileMenuOpen(false);
+                      onOpenSurveyModal();
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-blue-50 flex items-center space-x-2 text-blue-900 font-semibold"
+                  >
+                    <Sliders className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Skill &amp; Aim Check-In (Part A)</span>
+                  </button>
+                )}
 
                 <button
                   onClick={() => {

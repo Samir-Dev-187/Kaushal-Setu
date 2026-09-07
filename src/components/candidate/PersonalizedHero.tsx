@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CandidateProfile, CourseItem } from '../../types/candidate';
 import { MOCK_COURSES, MOCK_LOCAL_STATS } from '../../data/candidateMockData';
 import { SupportedLang, TRANSLATIONS } from '../../data/candidateTranslations';
+import { detectDomain, getDomainTelemetry } from '../../utils/candidateDomain';
 import {
   Search,
   Sparkles,
@@ -28,6 +29,10 @@ export const PersonalizedHero: React.FC<PersonalizedHeroProps> = ({
   onSelectCourse
 }) => {
   const t = TRANSLATIONS[language];
+  const domain = detectDomain(profile);
+  const telemetry = useMemo(() => {
+    return getDomainTelemetry(domain, profile.district, language);
+  }, [domain, profile.district, language]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<CourseItem[]>([]);
@@ -42,10 +47,10 @@ export const PersonalizedHero: React.FC<PersonalizedHeroProps> = ({
     // Check prefers-reduced-motion
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    if (prefersReducedMotion) {
-      setEvPlacementCount(MOCK_LOCAL_STATS.evPlacementRate);
-      setIcePlacementCount(MOCK_LOCAL_STATS.decliningFitterRate);
-      setDemandGapCount(MOCK_LOCAL_STATS.districtDemandGap);
+    if (prefersReducedMotion || profile.liteMode) {
+      setEvPlacementCount(telemetry.placementRate);
+      setIcePlacementCount(telemetry.decliningRate);
+      setDemandGapCount(telemetry.demandGap);
       return;
     }
 
@@ -57,9 +62,9 @@ export const PersonalizedHero: React.FC<PersonalizedHeroProps> = ({
     const timer = setInterval(() => {
       step++;
       const progress = step / steps;
-      setEvPlacementCount(Math.round(MOCK_LOCAL_STATS.evPlacementRate * progress));
-      setIcePlacementCount(Math.round(MOCK_LOCAL_STATS.decliningFitterRate * progress));
-      setDemandGapCount(Math.round(MOCK_LOCAL_STATS.districtDemandGap * progress));
+      setEvPlacementCount(Math.round(telemetry.placementRate * progress));
+      setIcePlacementCount(Math.round(telemetry.decliningRate * progress));
+      setDemandGapCount(Math.round(telemetry.demandGap * progress));
 
       if (step >= steps) {
         clearInterval(timer);
@@ -67,7 +72,7 @@ export const PersonalizedHero: React.FC<PersonalizedHeroProps> = ({
     }, intervalTime);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [telemetry, profile.liteMode]);
 
   // Handle Search Filtering
   useEffect(() => {
@@ -87,7 +92,7 @@ export const PersonalizedHero: React.FC<PersonalizedHeroProps> = ({
   }, [searchQuery]);
 
   const primarySectors =
-    profile.sectorsOfInterest && profile.sectorsOfInterest.length > 0
+    Array.isArray(profile?.sectorsOfInterest) && profile.sectorsOfInterest.length > 0
       ? profile.sectorsOfInterest.slice(0, 2).join(' & ')
       : 'EV & Technical Trades';
 
@@ -211,26 +216,23 @@ export const PersonalizedHero: React.FC<PersonalizedHeroProps> = ({
 
           <div className="flex flex-wrap items-center gap-2 mt-2 text-[11px] text-slate-400">
             <span>Try searching:</span>
-            <button
-              onClick={() => setSearchQuery('Fitter')}
-              className="underline text-amber-300 hover:text-amber-200"
-            >
-              Fitter (Oversupplied)
-            </button>
-            <span>•</span>
-            <button
-              onClick={() => setSearchQuery('ICE Engine')}
-              className="underline text-rose-300 hover:text-rose-200"
-            >
-              ICE Engine Mechanic (Obsolete)
-            </button>
-            <span>•</span>
-            <button
-              onClick={() => setSearchQuery('EV')}
-              className="underline text-emerald-300 hover:text-emerald-200"
-            >
-              EV Powertrain (High Demand)
-            </button>
+            {telemetry.searchChips.map((chip, idx) => (
+              <React.Fragment key={idx}>
+                <button
+                  onClick={() => setSearchQuery(chip.query)}
+                  className={`underline cursor-pointer ${
+                    chip.color === 'emerald'
+                      ? 'text-emerald-300 hover:text-emerald-200'
+                      : chip.color === 'rose'
+                      ? 'text-rose-300 hover:text-rose-200'
+                      : 'text-amber-300 hover:text-amber-200'
+                  }`}
+                >
+                  {chip.label}
+                </button>
+                {idx < telemetry.searchChips.length - 1 && <span>•</span>}
+              </React.Fragment>
+            ))}
           </div>
         </div>
 
@@ -253,7 +255,7 @@ export const PersonalizedHero: React.FC<PersonalizedHeroProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-300 leading-snug">
-              {t.statPlacementEV}
+              {telemetry.placementRateLabel}
             </p>
           </div>
 
@@ -274,7 +276,7 @@ export const PersonalizedHero: React.FC<PersonalizedHeroProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-300 leading-snug">
-              {t.statPlacementDeclining}
+              {telemetry.decliningRateLabel}
             </p>
           </div>
 
@@ -283,7 +285,7 @@ export const PersonalizedHero: React.FC<PersonalizedHeroProps> = ({
             <div className="flex items-center justify-between text-xs text-blue-400 font-bold mb-1">
               <span className="flex items-center space-x-1">
                 <ShieldCheck className="w-4 h-4" />
-                <span>{language === 'mr' ? 'स्थानिक तुटवडा' : 'MIDC Factory Shortfall'}</span>
+                <span>{language === 'mr' ? 'स्थानिक तुटवडा' : 'Shortfall / Openings'}</span>
               </span>
               <span className="text-[10px] bg-blue-950 text-blue-300 border border-blue-600/50 px-1.5 py-0.5 rounded">
                 Unfilled
@@ -295,7 +297,7 @@ export const PersonalizedHero: React.FC<PersonalizedHeroProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-300 leading-snug">
-              {t.statDemandGap}
+              {telemetry.demandGapLabel}
             </p>
           </div>
         </div>

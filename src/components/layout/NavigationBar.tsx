@@ -40,7 +40,7 @@ export const NavigationBar: React.FC = () => {
   };
 
   return (
-    <nav className="w-full bg-[#0C2340] text-white sticky top-0 z-50 shadow-md">
+    <nav className="w-full bg-[#0C2340] text-white sticky top-0 z-40 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-12">
           {/* Desktop Nav Items */}

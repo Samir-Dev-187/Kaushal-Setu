@@ -428,7 +428,7 @@ export const DashboardOverviewView: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {courses.slice(0, 6).map((c) => (
+              {(courses || []).slice(0, 6).map((c) => (
                 <tr
                   key={c.id}
                   onClick={() => setSelectedCourse(c)}
@@ -596,7 +596,7 @@ export const DashboardOverviewView: React.FC = () => {
             </div>
 
             <div className="divide-y divide-slate-100">
-              {notices.slice(0, 3).map((notice) => (
+              {(notices || []).slice(0, 3).map((notice) => (
                 <div
                   key={notice.id}
                   onClick={() => setSelectedNotice(notice)}
