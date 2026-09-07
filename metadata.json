@@ -1,0 +1,6 @@
+{
+  "name": "Kaushal Setu",
+  "description": "A Labour-Market Intelligence & Curriculum-Alignment Platform bridging skills with industry demand.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
